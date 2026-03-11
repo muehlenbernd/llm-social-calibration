@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+
+# Secrets — never commit API keys
+.env.local
+secrets.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDEs
+.idea/
+.vscode/
+
+# R
+.Rproj.user
+.Rhistory
+.RData
+*.Rproj
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large or sensitive data
+data/human_ratings/*.csv
+data/human_ratings/*.xlsx
