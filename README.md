@@ -25,6 +25,22 @@ all calibration-sensitive metrics across all models simultaneously.
 
 ---
 
+## Results
+
+![ESR Heatmap](results/figures/esr_heatmap.png)
+*Effect Size Ratios per model, prompting condition, and benchmark effect.
+White = perfect calibration (ESR = 1); blue = attenuation; red = exaggeration.*
+
+![Human vs Model Ratings](results/figures/fig_scatter.png)
+*Human vs. model mean ratings across all conditions. Points on the dashed
+identity line indicate perfect magnitude calibration.*
+
+![CDS Dotplot](results/figures/fig_cds_dotplot.png)
+*Calibration Deviation Scores by model and prompting condition.
+Lower = better alignment with human effect magnitudes.*
+
+---
+
 ## Repository Structure
 
 ```
