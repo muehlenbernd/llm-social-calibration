@@ -40,7 +40,7 @@ from src.analysis.metrics_plotter import (
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 
-HUMAN_PATH = "data/human_ratings/impX1.csv"
+HUMAN_PATH = "data/human_ratings/experiment1.csv"
 
 LLM_RESULTS = {
     "MIN": "data/llm_ratings/results_MIN.json",

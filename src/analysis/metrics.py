@@ -27,12 +27,12 @@ CONTEXT_MAP_HUMAN = {
 }
 
 ATTRIBUTE_MAP_HUMAN = {
-    "Acomp": "competent",
-    "Aknowl": "knowledgeable",
-    "Awellp": "well-prepared",
-    "Ahelp": "helpful",
-    "Alike": "likeable",
-    "Apednt": "pedantic"
+    "competent": "competent",
+    "knowledgeable": "knowledgeable",
+    "well_prepared": "well-prepared",
+    "helpful": "helpful",
+    "likeable": "likeable",
+    "pedantic": "pedantic"
 }
 
 ATTRIBUTES = list(ATTRIBUTE_MAP_HUMAN.values())
@@ -103,15 +103,15 @@ def load_human_data(path: str) -> pd.DataFrame:
     df = pd.read_csv(path)
 
     # --- scenario ---
-    df["scenario"] = df["Xscenario"].map(SCENARIO_MAP_HUMAN_TO_CANON)
+    df["scenario"] = df["scenario"].map(SCENARIO_MAP_HUMAN_TO_CANON)
     assert_no_missing(df["scenario"], "human scenario")
 
     # --- context ---
-    df["context"] = df["Xcontext"].map(CONTEXT_MAP_HUMAN)
+    df["context"] = df["context"].map(CONTEXT_MAP_HUMAN)
     assert_no_missing(df["context"], "human context")
 
     # --- utterance ---
-    df["utterance"] = df["Xanswer"]
+    df["utterance"] = df["form"]
     if not set(df["utterance"].unique()) <= {"precise", "approx"}:
         raise ValueError("[SANITY CHECK FAILED] Unexpected utterance labels")
 
