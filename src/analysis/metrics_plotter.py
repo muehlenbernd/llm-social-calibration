@@ -1,5 +1,6 @@
 # metrics_plotter.py
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -312,7 +313,8 @@ def plot_esr_heatmap(
     esr_col,
     title,
     drop_non_significant=False,
-    significant_attributes=None,
+    significant_main_attrs=None,
+    significant_interaction_attrs=None,
     model_order=None,
     prompt_order=None
 ):
@@ -323,54 +325,86 @@ def plot_esr_heatmap(
       - red above 1 (exaggeration)
       - values clipped to [0, 5]
 
+    Expects an ``effect_type`` column ('main' or 'interaction') in *esr_df*.
+    Each (attribute, effect_type) pair becomes its own row, so 5 main +
+    5 interaction attributes yield 10 rows.
+
     Parameters
     ----------
     drop_non_significant : bool
-        If True, only attributes in `significant_attributes` are shown.
-    significant_attributes : list or set
-        Attributes with significant human effects.
+        If True, keep only rows whose attribute belongs to the
+        corresponding significant set for its effect type.
+    significant_main_attrs : set or list, optional
+        Attributes with significant human main effects.
+    significant_interaction_attrs : set or list, optional
+        Attributes with significant human interaction effects.
     model_order : list or tuple, optional
-        Order of models. If None, uses sorted unique values from esr_df
+        Order of models. If None, uses sorted unique values from esr_df.
     prompt_order : list or tuple, optional
-        Order of prompts. If None, uses sorted unique values from esr_df
+        Order of prompts. If None, uses sorted unique values from esr_df.
     """
 
     import matplotlib.pyplot as plt
     from matplotlib.colors import TwoSlopeNorm, LinearSegmentedColormap
 
-    # -----------------------------
-    # Set default orders if not provided
-    # -----------------------------
     if model_order is None:
         model_order = sorted(esr_df["model"].unique())
     if prompt_order is None:
         prompt_order = sorted(esr_df["prompt"].unique())
 
-    # -----------------------------
-    # Optional attribute filtering
-    # -----------------------------
     df = esr_df.copy()
 
+    # -----------------------------
+    # Effect-type-aware filtering
+    # -----------------------------
     if drop_non_significant:
-        if significant_attributes is None:
+        if significant_main_attrs is None or significant_interaction_attrs is None:
             raise ValueError(
-                "significant_attributes must be provided "
-                "when drop_non_significant=True"
+                "significant_main_attrs and significant_interaction_attrs "
+                "must both be provided when drop_non_significant=True"
             )
-        df = df[df["attribute"].isin(significant_attributes)]
+        sig_main = set(significant_main_attrs)
+        sig_inter = set(significant_interaction_attrs)
+        mask = (
+            ((df["effect_type"] == "main") & df["attribute"].isin(sig_main))
+            | ((df["effect_type"] == "interaction") & df["attribute"].isin(sig_inter))
+        )
+        df = df[mask]
+
+    # -----------------------------
+    # Row label: abbreviated attribute + short effect type
+    # -----------------------------
+    attr_abbrev = {
+        "knowledgeable": "knowl.",
+        "well-prepared": "well-prep.",
+    }
+    effect_abbrev = {"main": "main", "interaction": "int."}
+    df["row_label"] = (
+        df["attribute"].map(lambda a: attr_abbrev.get(a, a))
+        + " ("
+        + df["effect_type"].map(lambda e: effect_abbrev.get(e, e))
+        + ")"
+    )
 
     # -----------------------------
     # Pivot table
     # -----------------------------
     pivot = df.pivot_table(
-        index="attribute",
+        index="row_label",
         columns=["model", "prompt"],
         values=esr_col
     )
 
     # -----------------------------
-    # Enforce column order:
-    # model → prompt order
+    # Enforce row order: main effects first, then interactions
+    # -----------------------------
+    main_labels = sorted(a for a in pivot.index if a.endswith("(main)"))
+    inter_labels = sorted(a for a in pivot.index if a.endswith("(int.)"))
+    ordered_rows = main_labels + inter_labels
+    pivot = pivot.loc[ordered_rows]
+
+    # -----------------------------
+    # Enforce column order: model → prompt
     # -----------------------------
     ordered_cols = [
         (m, p)
@@ -380,9 +414,6 @@ def plot_esr_heatmap(
     ]
     pivot = pivot[ordered_cols]
 
-    # -----------------------------
-    # Clip ESR values for display
-    # -----------------------------
     pivot_clipped = pivot.clip(lower=0, upper=5)
 
     # -----------------------------
@@ -393,16 +424,14 @@ def plot_esr_heatmap(
         ["#2166ac", "white", "#b2182b"]
     )
 
-    norm = TwoSlopeNorm(
-        vmin=0,
-        vcenter=1,
-        vmax=5
-    )
+    norm = TwoSlopeNorm(vmin=0, vcenter=1, vmax=5)
 
     # -----------------------------
     # Plot
     # -----------------------------
-    plt.figure(figsize=(8, 4))
+    n_rows = len(pivot_clipped)
+    fig_height = max(4, 0.45 * n_rows + 1.5)
+    plt.figure(figsize=(8, fig_height))
     im = plt.imshow(
         pivot_clipped.values,
         cmap=cmap,
@@ -412,8 +441,19 @@ def plot_esr_heatmap(
 
     cbar = plt.colorbar(im)
     cbar.set_label("Effect Size Ratio (ESR)")
-    cbar.set_ticks([0, 1, 2, 5])
-    cbar.set_ticklabels(["0 (none)", "1 (human-like)", "2", "≥5"])
+    cbar.set_ticks([0, 0.5, 1, 2, 3, 4, 5])
+    cbar.set_ticklabels(["0", "0.5", "1", "2", "3", "4", "≥5"])
+
+    # Annotate cells with numeric values
+    data = pivot_clipped.values
+    for i in range(data.shape[0]):
+        for j in range(data.shape[1]):
+            val = data[i, j]
+            if np.isnan(val):
+                continue
+            text_color = "white" if val < 0.3 or val > 3.5 else "black"
+            plt.text(j, i, f"{val:.2f}", ha="center", va="center",
+                     color=text_color, fontsize=7)
 
     plt.yticks(
         range(len(pivot_clipped.index)),
