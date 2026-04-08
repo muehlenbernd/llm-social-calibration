@@ -1,9 +1,22 @@
 # LLM Social Calibration
 
-Code for the paper:
+Code and data for the paper:
 
-> **Social Meaning in Large Language Models: Structure, Magnitude, and Pragmatic Prompting**  
-> Submitted to CMCL 2026 (Workshop on Cognitive Modeling and Computational Linguistics)
+> **Social Meaning in Large Language Models: Structure, Magnitude, and Pragmatic Prompting**
+> Accepted at CMCL 2026 (Workshop on Cognitive Modeling and Computational Linguistics, co-located with LREC 2026)
+> arXiv: https://arxiv.org/abs/2604.02512
+
+---
+
+## Notebook
+
+**`notebooks/01_social_meaning_llms.ipynb`** — guided walkthrough of the full analysis: data loading, structural alignment, global pattern similarity, magnitude calibration (ESR/CDS), and result figures.
+
+| | |
+|---|---|
+| [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/muehlenbernd/llm-social-calibration/blob/main/notebooks/01_social_meaning_llms.ipynb) | Interactive (Google account required) |
+| [![Launch Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/muehlenbernd/llm-social-calibration/main?filepath=notebooks/01_social_meaning_llms.ipynb) | Interactive (no account needed; slower start) |
+| [![View on GitHub](https://img.shields.io/badge/view-on%20GitHub-lightgrey?logo=github)](https://github.com/muehlenbernd/llm-social-calibration/blob/main/notebooks/01_social_meaning_llms.ipynb) | Read-only rendered view |
 
 ---
 
@@ -46,6 +59,9 @@ Lower = better alignment with human effect magnitudes.*
 ```
 llm-social-calibration/
 │
+├── notebooks/
+│   └── 01_social_meaning_llms.ipynb  # Guided analysis walkthrough
+│
 ├── src/
 │   ├── collection/         # LLM querying: API calls, experiment runner
 │   │   ├── main.py         # Entry point for data collection
@@ -66,15 +82,14 @@ llm-social-calibration/
 │   └── build_prompts.py    # Four prompting conditions: MIN, ALT, KMA, COM
 │
 ├── data/
-│   ├── llm_ratings/        # LLM ratings collected via API (4 conditions × ~1100 data points each)
+│   ├── llm_ratings/        # LLM ratings collected via API (4 conditions)
 │   │   ├── results_MIN.json
 │   │   ├── results_ALT.json
 │   │   ├── results_KMA.json
 │   │   └── results_COM.json
-│   └── human_ratings/      # Human benchmark data (see README inside)
+│   └── human_ratings/      # Human benchmark data (Solt et al. 2025)
 │
-├── results/figures/        # Generated plots (ESR heatmaps, HLC grids)
-├── notebooks/              # Exploratory analysis
+├── results/figures/        # Generated plots (ESR heatmaps, scatter, CDS)
 │
 ├── .env.example            # API key template
 └── requirements.txt
@@ -103,28 +118,38 @@ llm-social-calibration/
 
 ---
 
+## Data
+
+**LLM ratings** are included in `data/llm_ratings/` (4 JSON files, one per prompting condition).
+
+**Human benchmark data** (Solt et al. 2025) is archived at:
+> OSF: https://doi.org/10.17605/OSF.IO/M4RHN
+
+Place `impX1.csv` in `data/human_ratings/` before running the analysis scripts or notebook.
+
+---
+
 ## Setup
 
 ```bash
 git clone https://github.com/muehlenbernd/llm-social-calibration.git
 cd llm-social-calibration
 pip install -r requirements.txt
-cp .env.example .env   # add your API keys
+cp .env.example .env   # add your API keys (only needed for data collection)
 ```
 
 ---
 
 ## Reproducing the Analysis
 
-The LLM ratings are already included in `data/llm_ratings/`. To reproduce
-Tables 1–2 and Figure 1 from the paper, place the human benchmark data
-(see `data/human_ratings/README.md`) and run:
+The LLM ratings are already included. To reproduce Tables 1–2 and Figure 1, place the human
+benchmark data (see above) and either open the notebook or run:
 
 ```bash
 python -m src.analysis.main_metrics
 ```
 
-To re-collect LLM ratings from scratch (requires API keys and budget):
+To re-collect LLM ratings from scratch (requires API keys):
 
 ```bash
 # Set PROMPT_TYPE in src/collection/main.py, then:
@@ -148,21 +173,19 @@ models make inferences, not just *which* inferences they make.
 
 ## Citation
 
-If you use this code or the ESR/CDS metrics, please cite:
-
 ```bibtex
 @inproceedings{muehlenbernd2026social,
   title     = {Social Meaning in Large Language Models: Structure, Magnitude, and Pragmatic Prompting},
-  author    = {Mühlenbernd, Roland and others},
+  author    = {Mühlenbernd, Roland},
   booktitle = {Proceedings of the Workshop on Cognitive Modeling and Computational Linguistics (CMCL 2026)},
   year      = {2026}
 }
 ```
 
-*(Citation will be updated with full author list and proceedings details upon publication.)*
+*(Citation will be updated with full proceedings details upon publication.)*
 
 ---
 
 ## License
 
-Code: MIT License. Data: see `data/human_ratings/README.md`.
+Code: MIT License · Data: CC BY 4.0
